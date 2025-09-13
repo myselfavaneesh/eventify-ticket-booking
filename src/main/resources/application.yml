@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: Eventify
+
+server:
+  port: 8080
+  servlet:
+        context-path: /api
