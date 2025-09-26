@@ -1,6 +1,6 @@
 package com.avaneesh.yodha.Eventify.controllers;
 
-import com.avaneesh.yodha.Eventify.dto.request.CreateEventRequestDTO;
+import com.avaneesh.yodha.Eventify.dto.request.EventRequestDTO;
 import com.avaneesh.yodha.Eventify.dto.response.EventsResponse;
 import com.avaneesh.yodha.Eventify.entities.Events;
 import com.avaneesh.yodha.Eventify.services.EventService;
@@ -12,8 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/events")
 public class EventController {
@@ -22,7 +20,7 @@ public class EventController {
 
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Events>> createEvent(@Valid @RequestBody CreateEventRequestDTO request) {
+    public ResponseEntity<ApiResponse<Events>> createEvent(@Valid @RequestBody EventRequestDTO request) {
         Events event = eventService.createEvent(request);
         return new ResponseEntity<>(new ApiResponse<>(true,"Event created successfully", event), HttpStatus.CREATED);
     }
@@ -52,7 +50,7 @@ public class EventController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<EventsResponse>> updateEvent(@PathVariable Long id, @Valid @RequestBody CreateEventRequestDTO request) {
+    public ResponseEntity<ApiResponse<EventsResponse>> updateEvent(@PathVariable Long id, @Valid @RequestBody EventRequestDTO request) {
         EventsResponse updatedEvent = eventService.updateEvent(id, request);
         return new ResponseEntity<>(new ApiResponse<>(true, "Event updated successfully", updatedEvent), HttpStatus.OK);
     }

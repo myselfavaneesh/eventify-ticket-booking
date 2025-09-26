@@ -2,12 +2,15 @@ package com.avaneesh.yodha.Eventify.dto.request;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import java.util.List;
+
 
 @Data
-public class CreateEventRequestDTO {
+public class EventRequestDTO {
     @NotBlank(message = "Event name cannot be blank")
     @Size(min = 3, max = 100, message = "Event name must be between 3 and 100 characters")
     private String name;
@@ -23,4 +26,6 @@ public class CreateEventRequestDTO {
     private int totalSeats;
     @Min(value = 1, message = "Seats per row must be at least 1")
     private int seatsPerRow;
+    @NotEmpty(message = "Seat pricing cannot be empty")
+    private List<Double> seatPricing;
 }

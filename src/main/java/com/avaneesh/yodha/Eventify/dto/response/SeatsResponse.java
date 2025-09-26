@@ -8,4 +8,5 @@ public class SeatsResponse {
     private Long id;
     private String seatNumber;
     private SeatStatus status;
+    private int seatPrice;
 }

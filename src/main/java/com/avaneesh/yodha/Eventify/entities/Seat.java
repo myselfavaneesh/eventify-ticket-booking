@@ -5,6 +5,8 @@ import com.avaneesh.yodha.Eventify.enums.SeatStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Entity
 @Table(name = "seats")
@@ -31,4 +33,7 @@ public class Seat {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_id")
     private Booking booking;
+
+    @Column(nullable = false)
+    private Double seatPricing;
 }

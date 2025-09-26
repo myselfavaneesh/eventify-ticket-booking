@@ -12,9 +12,6 @@ public class BookingRequestDTO {
     @NotNull(message = "Event ID cannot be null")
     @Min(value = 1, message = "Event ID must be a positive number")
     private Long eventId;
-    @NotNull(message = "User ID cannot be null")
-    @Min(value = 1, message = "User ID must be a positive number")
-    private Long userId;
     @NotEmpty(message = "Seat IDs cannot be empty")
     @NotNull(message = "Seat IDs cannot be null")
     private List<Long> seatIds;

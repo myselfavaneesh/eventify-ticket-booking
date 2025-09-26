@@ -8,8 +8,6 @@ import java.util.List;
 
 @Mapper(componentModel = "spring", uses = {SeatMapper.class}) // uses is for nested mappings
 public interface BookingMapper {
-    @Mapping(target = "event", ignore = true)
-    @Mapping(target = "user", ignore = true)
     BookingResponse toBookingResponse(Booking booking);
 
     List<BookingResponse> toBookingResponseList(List<Booking> bookings);
