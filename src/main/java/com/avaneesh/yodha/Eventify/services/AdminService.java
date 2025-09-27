@@ -3,42 +3,48 @@ package com.avaneesh.yodha.Eventify.services;
 import com.avaneesh.yodha.Eventify.dto.response.AdminDashboardStatsDTO;
 import com.avaneesh.yodha.Eventify.dto.response.BookingResponse;
 import com.avaneesh.yodha.Eventify.dto.response.UserResponse;
-import com.avaneesh.yodha.Eventify.entities.Booking;
 import com.avaneesh.yodha.Eventify.enums.BookingStatus;
 import com.avaneesh.yodha.Eventify.mapper.BookingMapper;
 import com.avaneesh.yodha.Eventify.mapper.UserMapper;
 import com.avaneesh.yodha.Eventify.repository.BookingRepository;
 import com.avaneesh.yodha.Eventify.repository.EventRepository;
 import com.avaneesh.yodha.Eventify.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * Service layer for handling administrative functionalities.
+ * Provides methods for fetching dashboard statistics, all users, and all bookings.
+ */
 @Service
 public class AdminService {
 
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private EventRepository eventRepository;
-    @Autowired
-    private BookingRepository bookingRepository;
-    @Autowired
-    private UserMapper userMapper;
-    @Autowired
-    private BookingMapper bookingMapper;
+    private final UserRepository userRepository;
+    private final EventRepository eventRepository;
+    private final BookingRepository bookingRepository;
+    private final UserMapper userMapper;
+    private final BookingMapper bookingMapper;
 
+    public AdminService(UserRepository userRepository, EventRepository eventRepository, BookingRepository bookingRepository, UserMapper userMapper, BookingMapper bookingMapper) {
+        this.userRepository = userRepository;
+        this.eventRepository = eventRepository;
+        this.bookingRepository = bookingRepository;
+        this.userMapper = userMapper;
+        this.bookingMapper = bookingMapper;
+    }
+
+    /**
+     * Gathers and returns key statistics for the admin dashboard.
+     *
+     * @return A DTO containing total users, events, bookings, and revenue.
+     */
     public AdminDashboardStatsDTO getDashboardStats() {
         long totalUsers = userRepository.count();
         long totalEvents = eventRepository.count();
         long totalBookings = bookingRepository.count();
-
-        // Calculate revenue only from CONFIRMED bookings
-        double totalRevenue = bookingRepository.findAll().stream()
-                .filter(booking -> booking.getStatus() == BookingStatus.CONFIRMED)
-                .mapToDouble(Booking::getTotalAmount)
-                .sum();
+        // Optimized revenue calculation using a dedicated repository query
+        double totalRevenue = bookingRepository.sumTotalAmountByStatus(BookingStatus.CONFIRMED);
 
         return AdminDashboardStatsDTO.builder()
                 .totalUsers(totalUsers)
@@ -48,12 +54,22 @@ public class AdminService {
                 .build();
     }
 
+    /**
+     * Retrieves a list of all users in the system.
+     *
+     * @return A list of UserResponse DTOs.
+     */
     public List<UserResponse> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(userMapper::toUserResponse)
                 .toList();
     }
 
+    /**
+     * Retrieves a list of all bookings in the system.
+     *
+     * @return A list of BookingResponse DTOs.
+     */
     public List<BookingResponse> getAllBookings() {
         return bookingRepository.findAll().stream()
                 .map(bookingMapper::toBookingResponse)

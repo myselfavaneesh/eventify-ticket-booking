@@ -1,11 +1,11 @@
 package com.avaneesh.yodha.Eventify.utils;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
-import lombok.Data;
+import io.jsonwebtoken.security.SignatureException;
+import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -16,19 +16,38 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Utility class for handling JWT token generation, parsing, and validation.
+ */
 @Component
-@Data
 public class JWTUtility {
- @Value("${jwt.secret}")
- private String SECRET;
 
- @Value("${jwt.expiration}")
- private long EXPIRATION_TIME;
+    private static final Logger logger = LoggerFactory.getLogger(JWTUtility.class);
 
-    private Key getSigningKey() {
-        return Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
+    private final String secret;
+    private final long expirationTime;
+    private Key signingKey;
+
+    public JWTUtility(@Value("${jwt.secret}") String secret, @Value("${jwt.expiration}") long expirationTime) {
+        this.secret = secret;
+        this.expirationTime = expirationTime;
     }
 
+    /**
+     * Initializes the signing key after the bean has been constructed.
+     */
+    @PostConstruct
+    public void init() {
+        this.signingKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Generates a JWT token for a given username and roles.
+     *
+     * @param username The subject of the token.
+     * @param roles    The user's roles to be included in the claims.
+     * @return A signed JWT token string.
+     */
     public String generateToken(String username, List<String> roles) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles", roles);
@@ -37,38 +56,67 @@ public class JWTUtility {
                 .setClaims(claims)
                 .setSubject(username)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256) // Method call
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+                .signWith(signingKey, SignatureAlgorithm.HS256)
                 .compact();
     }
 
+    /**
+     * Extracts the username (subject) from a JWT token.
+     *
+     * @param token The JWT token.
+     * @return The username.
+     */
     public String extractUsername(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey()) // Method call
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+        return extractAllClaims(token).getSubject();
     }
 
+    /**
+     * Extracts the roles from a JWT token.
+     *
+     * @param token The JWT token.
+     * @return A list of roles.
+     */
+    @SuppressWarnings("unchecked")
     public List<String> extractRoles(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
+        return extractAllClaims(token).get("roles", List.class);
+    }
+
+    /**
+     * Validates a JWT token by checking its signature and expiration.
+     *
+     * @param token The JWT token to validate.
+     * @return True if the token is valid, false otherwise.
+     */
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder().setSigningKey(signingKey).build().parseClaimsJws(token);
+            return true;
+        } catch (SignatureException e) {
+            logger.error("Invalid JWT signature: {}", e.getMessage());
+        } catch (MalformedJwtException e) {
+            logger.error("Invalid JWT token: {}", e.getMessage());
+        } catch (ExpiredJwtException e) {
+            logger.error("JWT token is expired: {}", e.getMessage());
+        } catch (UnsupportedJwtException e) {
+            logger.error("JWT token is unsupported: {}", e.getMessage());
+        } catch (IllegalArgumentException e) {
+            logger.error("JWT claims string is empty: {}", e.getMessage());
+        }
+        return false;
+    }
+
+    /**
+     * Helper method to extract all claims from a token.
+     *
+     * @param token The JWT token.
+     * @return The claims from the token.
+     */
+    private Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(signingKey)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
-        return (List<String>) claims.get("roles", List.class);
-    }
-
-    public boolean validateToken(String token) {
-        try {
-            Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey()) // Method call
-                    .build()
-                    .parseClaimsJws(token);
-            return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            return false;
-        }
     }
 }

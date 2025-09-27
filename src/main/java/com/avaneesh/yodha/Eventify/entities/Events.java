@@ -26,6 +26,15 @@ public class Events {
     @Column(nullable = false)
     private LocalDateTime eventTimestamp;
 
+    @Column(nullable = false)
+    private int totalSeats;
+
+    @Column(nullable = false)
+    private int seatsPerRow;
+
+    @Column(nullable = false)
+    private int bookedSeats = 0;
+
     // One Event has Many Seats
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Seat> seats = new ArrayList<>();
@@ -33,4 +42,12 @@ public class Events {
     // One Event has Many Bookings
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Booking> bookings = new ArrayList<>();
+
+    /**
+     * Calculates the number of available seats.
+     * @return The number of seats that are not yet booked.
+     */
+    public int getAvailableSeats() {
+        return totalSeats - bookedSeats;
+    }
 }

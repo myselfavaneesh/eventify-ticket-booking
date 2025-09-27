@@ -23,6 +23,9 @@ public class Booking {
     @Column(nullable = false)
     private Double totalAmount;
 
+    @Column(nullable = false)
+    private int numberOfSeats;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private BookingStatus status;

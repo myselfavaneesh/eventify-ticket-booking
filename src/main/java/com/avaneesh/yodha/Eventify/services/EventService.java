@@ -10,170 +10,183 @@ import com.avaneesh.yodha.Eventify.mapper.EventMapper;
 import com.avaneesh.yodha.Eventify.repository.EventRepository;
 import com.avaneesh.yodha.Eventify.repository.SeatRepository;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Service layer for managing events, including creation, retrieval, updates, and seat generation.
+ */
 @Service
 public class EventService {
-    @Autowired
-    private EventRepository eventRepository;
 
-    @Autowired
-    private SeatRepository seatRepository;
+    private final EventRepository eventRepository;
+    private final SeatRepository seatRepository;
+    private final EventMapper eventMapper;
 
-    @Autowired
-    private EventMapper eventMapper;
+    public EventService(EventRepository eventRepository, SeatRepository seatRepository, EventMapper eventMapper) {
+        this.eventRepository = eventRepository;
+        this.seatRepository = seatRepository;
+        this.eventMapper = eventMapper;
+    }
 
-
+    /**
+     * Creates a new event and generates its seating arrangement.
+     *
+     * @param request The DTO containing the event details.
+     * @return A DTO representing the newly created event.
+     */
     @Transactional
-    public Events createEvent(EventRequestDTO request) {
+    public EventsResponse createEvent(EventRequestDTO request) {
+        Events newEvent = eventMapper.toEvent(request);
+        Events savedEvent = eventRepository.save(newEvent);
 
-        // --- Validation Step ---
-        int totalRows = (int) Math.ceil((double) request.getTotalSeats() / request.getSeatsPerRow());
-        if (request.getSeatPricing().size() != totalRows) {
-            throw new IllegalArgumentException("The number of prices in seatPricing (" + request.getSeatPricing().size() +
-                    ") must match the total number of rows (" + totalRows + ").");
-        }
-        // --- End Validation ---
-
-        Events savedEvent = eventRepository.save(eventMapper.toEvent(request));
-
-        List<Seat> seats = new ArrayList<>();
-        char currentRowChar = 'A';
-        int currentSeatInRow = 1;
-        int rowIndex = 0; // To track which price to use from the list
-
-        for (int i = 0; i < request.getTotalSeats(); i++) {
-            String seatNumber = currentRowChar + "" + currentSeatInRow;
-            Double currentPrice = request.getSeatPricing().get(rowIndex);
-
-            Seat seat = new Seat();
-            seat.setSeatNumber(seatNumber);
-            seat.setStatus(SeatStatus.AVAILABLE);
-            seat.setEvent(savedEvent);
-            seat.setSeatPricing(currentPrice);
-            seats.add(seat);
-
-            currentSeatInRow++;
-            if (currentSeatInRow > request.getSeatsPerRow()) {
-                currentSeatInRow = 1;
-                currentRowChar++;
-                rowIndex++;
-            }
-        }
+        List<Seat> seats = generateSeatsForEvent(savedEvent, request);
         seatRepository.saveAll(seats);
-        return savedEvent;
+        savedEvent.setSeats(seats);
+
+        return eventMapper.toEventResponse(savedEvent);
     }
 
-    @Transactional
+    /**
+     * Retrieves a paginated list of all events.
+     *
+     * @param pageNo   The page number.
+     * @param pageSize The size of the page.
+     * @param sortBy   The field to sort by.
+     * @return A paginated list of event DTOs.
+     */
     public Page<EventsResponse> getAllEvents(int pageNo, int pageSize, String sortBy) {
-        // Create the Pageable object with pagination and sorting
         Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.DESC, sortBy));
-
-        // Fetch the paginated Events entities from the repository
-        Page<Events> eventsPage = eventRepository.findAll(pageable);
-
-        // Map the paginated Events entities to EventsResponse DTOs
-        return eventsPage.map(eventMapper::toEventResponse);
+        return eventRepository.findAll(pageable).map(eventMapper::toEventResponse);
     }
 
-    @Transactional
+    /**
+     * Retrieves a paginated list of events for a specific venue.
+     *
+     * @param venue    The venue to filter by.
+     * @param pageNo   The page number.
+     * @param pageSize The size of the page.
+     * @return A paginated list of event DTOs for the specified venue.
+     */
     public Page<EventsResponse> getAllSpecificVenueEvents(String venue, int pageNo, int pageSize) {
         Pageable pageable = PageRequest.of(pageNo, pageSize);
-        Page<Events> eventsPage = eventRepository.findByVenueContaining(venue ,pageable);
-        return eventsPage.map(eventMapper::toEventResponse);
+        return eventRepository.findByVenueContaining(venue, pageable).map(eventMapper::toEventResponse);
     }
 
-    @Transactional
+    /**
+     * Retrieves a single event by its ID.
+     *
+     * @param eventId The ID of the event.
+     * @return A DTO representing the event.
+     */
     public EventsResponse getEventById(Long eventId) {
-        Events ReqEvent = eventRepository.findById(eventId).orElseThrow(
-                () -> new ResourceNotFoundException("Event not found with id: " + eventId)
-        );
-
-        return eventMapper.toEventResponse(ReqEvent);
+        return eventRepository.findById(eventId)
+                .map(eventMapper::toEventResponse)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + eventId));
     }
 
+    /**
+     * Updates an existing event. If the seating layout has changed and there are no existing bookings,
+     * the old seats are deleted and new ones are generated.
+     *
+     * @param eventId The ID of the event to update.
+     * @param request The DTO with updated event details.
+     * @return A DTO representing the updated event.
+     * @throws IllegalStateException if attempting to change the seat layout of an event that already has bookings.
+     */
     @Transactional
     public EventsResponse updateEvent(Long eventId, EventRequestDTO request) {
         Events existingEvent = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + eventId));
 
-        // Update basic event details
-        existingEvent.setName(request.getName());
-        existingEvent.setDescription(request.getDescription());
-        existingEvent.setVenue(request.getVenue());
-        existingEvent.setEventTimestamp(LocalDateTime.parse(request.getEventTimestamp()));
+        boolean layoutChanged = hasLayoutChanged(existingEvent, request);
 
-        // --- Logic to check if seats need rebuilding ---
-        // Calculate the original number of rows for comparison
-        int originalTotalSeats = existingEvent.getSeats().size();
-        int originalSeatsPerRow = 0;
-        if (!existingEvent.getSeats().isEmpty()) {
-            // A simple way to estimate original seats per row
-            String lastSeatNumber = existingEvent.getSeats().get(originalTotalSeats - 1).getSeatNumber();
-            originalSeatsPerRow = Integer.parseInt(lastSeatNumber.substring(1));
-        }
-
-        boolean seatsChanged = request.getTotalSeats() != originalTotalSeats ||
-                request.getSeatsPerRow() != originalSeatsPerRow ||
-                request.getSeatPricing().size() != (int) Math.ceil((double) request.getTotalSeats() / request.getSeatsPerRow());
-
-
-        if (seatsChanged) {
-            // --- Validation Step ---
-            int totalRows = (int) Math.ceil((double) request.getTotalSeats() / request.getSeatsPerRow());
-            if (request.getSeatPricing().size() != totalRows) {
-                throw new IllegalArgumentException("The number of prices in seatPricing (" + request.getSeatPricing().size() +
-                        ") must match the total number of rows (" + totalRows + ").");
+        if (layoutChanged) {
+            if (existingEvent.getBookedSeats() > 0) {
+                throw new IllegalStateException("Cannot change seat layout for an event that already has bookings.");
             }
-            // --- End Validation ---
-
-            // Clear old seats before adding new ones
+            // Clear old seats and generate new ones
+            seatRepository.deleteByEvent(existingEvent);
             existingEvent.getSeats().clear();
-            seatRepository.deleteByEvent(existingEvent); // Explicitly delete old seats to be safe
-
-            List<Seat> newSeats = new ArrayList<>();
-            char currentRowChar = 'A';
-            int currentSeatInRow = 1;
-            int rowIndex = 0; // To track which price to use
-
-            for (int i = 0; i < request.getTotalSeats(); i++) {
-                String seatNumber = currentRowChar + "" + currentSeatInRow;
-                Double currentPrice = request.getSeatPricing().get(rowIndex); // Get price for the current row
-
-                Seat seat = new Seat();
-                seat.setSeatNumber(seatNumber);
-                seat.setStatus(SeatStatus.AVAILABLE);
-                seat.setEvent(existingEvent);
-                seat.setSeatPricing(currentPrice); // Set the price
-                newSeats.add(seat);
-
-                currentSeatInRow++;
-                if (currentSeatInRow > request.getSeatsPerRow()) {
-                    currentSeatInRow = 1;
-                    currentRowChar++;
-                    rowIndex++; // Move to the next price for the next row
-                }
-            }
+            List<Seat> newSeats = generateSeatsForEvent(existingEvent, request);
             existingEvent.getSeats().addAll(newSeats);
         }
+
+        // Update event properties from DTO
+        eventMapper.updateEventFromDto(request, existingEvent);
 
         Events updatedEvent = eventRepository.save(existingEvent);
         return eventMapper.toEventResponse(updatedEvent);
     }
 
+    /**
+     * Deletes an event by its ID.
+     *
+     * @param id The ID of the event to delete.
+     */
     @Transactional
     public void deleteEvent(Long id) {
-        Events existingEvent = eventRepository.findById(id).orElseThrow(
-                () -> new ResourceNotFoundException("Event not found with id: " + id));
-        eventRepository.delete(existingEvent);
+        if (!eventRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Event not found with id: " + id);
+        }
+        eventRepository.deleteById(id);
+    }
+
+    // --- Private Helper Methods ---
+
+    private List<Seat> generateSeatsForEvent(Events event, EventRequestDTO request) {
+        int totalSeats = request.getTotalSeats();
+        int seatsPerRow = request.getSeatsPerRow();
+        List<Double> seatPricing = request.getSeatPricing();
+        int totalRows = (int) Math.ceil((double) totalSeats / seatsPerRow);
+
+        if (seatPricing.size() != totalRows) {
+            throw new IllegalArgumentException("The number of prices in seatPricing (" + seatPricing.size() +
+                    ") must match the calculated number of rows (" + totalRows + ").");
+        }
+
+        List<Seat> seats = new ArrayList<>();
+        char currentRowChar = 'A';
+        int currentSeatInRow = 1;
+        int rowIndex = 0;
+
+        for (int i = 0; i < totalSeats; i++) {
+            String seatNumber = String.format("%c%d", currentRowChar, currentSeatInRow);
+            double currentPrice = seatPricing.get(rowIndex);
+
+            Seat seat = new Seat();
+            seat.setSeatNumber(seatNumber);
+            seat.setStatus(SeatStatus.AVAILABLE);
+            seat.setEvent(event);
+            seat.setSeatPricing(currentPrice);
+            seats.add(seat);
+
+            currentSeatInRow++;
+            if (currentSeatInRow > seatsPerRow) {
+                currentSeatInRow = 1;
+                currentRowChar++;
+                rowIndex++;
+            }
+        }
+        return seats;
+    }
+
+    private boolean hasLayoutChanged(Events event, EventRequestDTO request) {
+        int currentTotalSeats = event.getSeats() != null ? event.getSeats().size() : 0;
+        if (currentTotalSeats == 0) return true; // Layout is new
+
+        // A simple way to estimate original seats per row
+        int currentSeatsPerRow = event.getSeats().stream()
+                .filter(s -> s.getSeatNumber().startsWith("A"))
+                .mapToInt(s -> 1)
+                .sum();
+
+        return request.getTotalSeats() != currentTotalSeats || request.getSeatsPerRow() != currentSeatsPerRow;
     }
 }

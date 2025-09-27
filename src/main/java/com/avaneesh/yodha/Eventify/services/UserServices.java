@@ -10,9 +10,6 @@ import com.avaneesh.yodha.Eventify.repository.UserRepository;
 import com.avaneesh.yodha.Eventify.security.UserDetailImp;
 import com.avaneesh.yodha.Eventify.utils.JWTUtility;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -20,62 +17,65 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-
+/**
+ * Service layer for handling user-related operations like registration and login.
+ */
 @Service
 public class UserServices {
 
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private BCryptPasswordEncoder bCryptPasswordEncoder;
-    @Autowired
-    private UserMapper userMapper;
-    @Autowired
-    private JWTUtility jwtUtility;
-    @Autowired
-    private AuthenticationManager authManager;
+    private final UserRepository userRepository;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final UserMapper userMapper;
+    private final JWTUtility jwtUtility;
+    private final AuthenticationManager authManager;
 
-    @Value("${app.jwt.cookie-secure}")
-    private boolean cookieSecure;
+    public UserServices(UserRepository userRepository, BCryptPasswordEncoder bCryptPasswordEncoder, UserMapper userMapper, JWTUtility jwtUtility, AuthenticationManager authManager) {
+        this.userRepository = userRepository;
+        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+        this.userMapper = userMapper;
+        this.jwtUtility = jwtUtility;
+        this.authManager = authManager;
+    }
 
+    /**
+     * Registers a new user.
+     *
+     * @param userRequest The DTO containing the new user's details.
+     * @return A DTO representing the newly created user.
+     * @throws ResourceAlreadyExistsException if a user with the same email already exists.
+     */
     @Transactional
-    public UserResponse CreateUser(UserRequest userRequest) {
+    public UserResponse createUser(UserRequest userRequest) {
         userRepository.getUsersByEmail(userRequest.getEmail()).ifPresent(user -> {
-            System.out.println("User with email " + userRequest.getEmail() + " already exists");
             throw new ResourceAlreadyExistsException("User with email " + userRequest.getEmail() + " already exists");
         });
+
         Users user = userMapper.toUser(userRequest);
         user.setPassword(bCryptPasswordEncoder.encode(userRequest.getPassword()));
         Users savedUser = userRepository.save(user);
+
         return userMapper.toUserResponse(savedUser);
     }
 
-    @Transactional
+    /**
+     * Authenticates a user and generates a JWT token.
+     *
+     * @param email    The user's email.
+     * @param password The user's password.
+     * @return A JWT token string.
+     * @throws ResourceNotFoundException if the authentication fails.
+     */
     public String loginUser(String email, String password) {
-
         try {
             Authentication authentication = authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(email, password));
 
             UserDetailImp userDetails = (UserDetailImp) authentication.getPrincipal();
 
-            String jwtToken = jwtUtility.generateToken(userDetails.getUsername(), userDetails.getRoles());
-
-            ResponseCookie jwtCookie = ResponseCookie.from("JWT-TOKEN", jwtToken)
-                    .httpOnly(true)
-                    .secure(cookieSecure)
-                    .path("/")
-                    .maxAge(Duration.ofHours(1))
-                    .sameSite("Strict")
-                    .build();
-
-            return jwtCookie.toString();
+            return jwtUtility.generateToken(userDetails.getUsername(), userDetails.getRoles());
 
         } catch (AuthenticationException ex) {
-            System.out.println("Auth failed: " + ex.getClass().getSimpleName());
             throw new ResourceNotFoundException("Invalid email or password");
         }
     }
-
 }
