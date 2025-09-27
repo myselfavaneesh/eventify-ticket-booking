@@ -30,102 +30,13 @@ Eventify is a robust and scalable backend solution for an event booking platform
 - **Database**: MySQL
 - **Security**: Spring Security, JSON Web Tokens (JWT)
 - **Data Access**: Spring Data JPA (Hibernate)
-- **API Documentation**: (Implicit through this README)
+- **API Documentation**: SpringDoc (Swagger UI)
 - **Build Tool**: Maven
 - **Other Libraries**: Lombok, MapStruct, JJWT
 
 ---
 
-## 4. API Endpoints
-
-The base path for all API endpoints is `/api/v1`.
-
-### 4.1. Authentication (`/auth/users`)
-
-| Method | Endpoint             | Description                                      |
-|--------|----------------------|--------------------------------------------------|
-| `POST` | `/register`          | Registers a new user.                            |
-| `POST` | `/login`             | Authenticates a user and returns a JWT token.    |
-
-**Example `POST /register` Request:**
-```json
-{
-  "name": "John Doe",
-  "email": "john.doe@example.com",
-  "password": "password123",
-  "role": "USER"
-}
-```
-
-### 4.2. Events (`/api/events`)
-
-| Method | Endpoint             | Description                                      |
-|--------|----------------------|--------------------------------------------------|
-| `POST` | `/`                  | Creates a new event (Admin only).                |
-| `GET`  | `/`                  | Retrieves a paginated list of all events.        |
-| `GET`  | `/{id}`              | Retrieves a specific event by its ID.            |
-| `GET`  | `/venue/{venue}`     | Retrieves a paginated list of events by venue.   |
-| `PUT`  | `/{id}`              | Updates an existing event (Admin only).          |
-| `DELETE`| `/{id}`             | Deletes an event (Admin only).                   |
-
-**Example `POST /` Request:**
-```json
-{
-  "name": "Live Concert",
-  "description": "A live music concert.",
-  "venue": "Central Park",
-  "eventTimestamp": "2024-10-20T20:00:00",
-  "totalSeats": 100,
-  "seatsPerRow": 10,
-  "seatPricing": [50.0, 40.0, 30.0, 30.0, 25.0, 25.0, 20.0, 20.0, 15.0, 15.0]
-}
-```
-
-### 4.3. Bookings (`/api/bookings`)
-
-| Method | Endpoint             | Description                                      |
-|--------|----------------------|--------------------------------------------------|
-| `POST` | `/`                  | Creates a new booking for the authenticated user.|
-| `GET`  | `/{id}`              | Retrieves a specific booking by its ID.          |
-| `GET`  | `/user`              | Retrieves all bookings for the authenticated user.|
-| `PATCH`| `/{id}/cancel`       | Cancels a booking.                               |
-| `DELETE`| `/{id}`             | Deletes a booking (Admin only).                  |
-
-**Example `POST /` Request:**
-```json
-{
-  "eventId": 1,
-  "seatIds": [1, 2, 3]
-}
-```
-
-### 4.4. Payments (`/api/payments`)
-
-| Method | Endpoint             | Description                                      |
-|--------|----------------------|--------------------------------------------------|
-| `POST` | `/initiate/{bookingId}`| Initiates the payment process for a booking.     |
-| `POST` | `/webhook`           | Webhook to confirm or fail a payment.            |
-
-**Example `POST /webhook` Request (Success):**
-```json
-{
-  "transactionId": "txn_12345",
-  "paymentStatus": "COMPLETED",
-  "paymentMethod": "CREDIT_CARD"
-}
-```
-
-### 4.5. Admin (`/api/admin`)
-
-| Method | Endpoint             | Description                                      |
-|--------|----------------------|--------------------------------------------------|
-| `GET`  | `/dashboard/stats`   | Retrieves statistics for the admin dashboard.    |
-| `GET`  | `/users`             | Retrieves a list of all users.                   |
-| `GET`  | `/bookings`          | Retrieves a list of all bookings.                |
-
----
-
-## 5. Getting Started
+## 4. Getting Started
 
 ### Prerequisites
 
@@ -137,7 +48,7 @@ The base path for all API endpoints is `/api/v1`.
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://your-repository-url/eventify.git
+    git clone https://github.com/myselfavaneesh/eventify-ticket-booking.git
     cd eventify
     ```
 
@@ -153,6 +64,16 @@ The base path for all API endpoints is `/api/v1`.
     mvn spring-boot:run
     ```
     The application will start on `http://localhost:8080`.
+
+---
+
+## 5. API Documentation (Swagger UI)
+
+Once the application is running, you can access the interactive API documentation via Swagger UI at the following URL:
+
+[http://localhost:8080/api/v1/swagger-ui.html](http://localhost:8080/api/v1/swagger-ui.html)
+
+The Swagger UI allows you to explore all the API endpoints, view their details, and test them directly from your browser.
 
 ---
 
