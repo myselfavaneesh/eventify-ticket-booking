@@ -6,9 +6,11 @@ import com.avaneesh.yodha.Eventify.services.BookingService;
 import com.avaneesh.yodha.Eventify.utils.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.neo4j.Neo4jProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,7 +46,8 @@ public class BookingController {
 
     @PatchMapping("/{id}/cancel")
     public ResponseEntity<ApiResponse<BookingResponse>> cancelBooking(@PathVariable Long id) {
-        BookingResponse bookingResponse = bookingService.cancelBooking(id);
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        BookingResponse bookingResponse = bookingService.cancelBooking(id,email);
         ApiResponse<BookingResponse> response = new ApiResponse<>(true, "Booking cancelled successfully", bookingResponse);
         return ResponseEntity.ok(response);
     }

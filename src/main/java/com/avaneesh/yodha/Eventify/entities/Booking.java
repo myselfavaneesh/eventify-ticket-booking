@@ -32,6 +32,9 @@ public class Booking {
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
 
+    @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Payments payment;
+
     // Many Bookings can be for one Event
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)

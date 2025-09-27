@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,6 +41,9 @@ public class BookingService {
 
     @Autowired
     private BookingMapper bookingMapper;
+
+    @Autowired
+    private PaymentService paymentService;
 
     @Transactional
     public BookingResponse createBooking(String email, BookingRequestDTO requestBooking) {
@@ -121,12 +125,14 @@ public class BookingService {
      * CANCEL (UPDATE): Cancels a booking and frees the associated seats.
      */
     @Transactional
-    public BookingResponse cancelBooking(Long bookingId) {
+    public BookingResponse cancelBooking(Long bookingId , String email) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + bookingId));
 
         if (booking.getStatus() == BookingStatus.CANCELLED) {
             throw new IllegalStateException("Booking is already cancelled.");
+        } else if (!booking.getUser().getEmail().equals(email)) {
+            throw new IllegalStateException("Only the booking owner can cancel the booking.");
         }
 
         // Free the seats
@@ -138,6 +144,10 @@ public class BookingService {
 
         // Update the booking status
         booking.setStatus(BookingStatus.CANCELLED);
+
+
+        paymentService.refundPayment(booking.getPayment().getTransactionId());
+
         Booking updatedBooking = bookingRepository.save(booking);
 
         return bookingMapper.toBookingResponse(updatedBooking);
