@@ -51,14 +51,17 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.cors(cors -> cors.configurationSource(corsConfigurationSource())) // 1. Apply CORS configuration
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/auth/users/login", "/auth/users").permitAll()
+                        // VENDOR and ADMIN can manage events
                         .requestMatchers(HttpMethod.POST,"/events").hasAnyAuthority("VENDOR", "ADMIN")
                         .requestMatchers(HttpMethod.PUT,"/events/**").hasAnyAuthority("VENDOR", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE,"/events/**").hasAnyAuthority("VENDOR", "ADMIN")
+                        // Add this rule: Only ADMIN can access admin endpoints
+                        .requestMatchers("/admin/**").hasAuthority("ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(ex ->
                         ex
