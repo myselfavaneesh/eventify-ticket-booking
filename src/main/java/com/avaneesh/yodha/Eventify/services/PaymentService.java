@@ -7,7 +7,6 @@ import com.avaneesh.yodha.Eventify.entities.Booking;
 import com.avaneesh.yodha.Eventify.entities.Payments;
 import com.avaneesh.yodha.Eventify.entities.Seat;
 import com.avaneesh.yodha.Eventify.enums.BookingStatus;
-import com.avaneesh.yodha.Eventify.enums.PaymentMethod;
 import com.avaneesh.yodha.Eventify.enums.PaymentStatus;
 import com.avaneesh.yodha.Eventify.enums.SeatStatus;
 import com.avaneesh.yodha.Eventify.exception.ResourceNotFoundException;

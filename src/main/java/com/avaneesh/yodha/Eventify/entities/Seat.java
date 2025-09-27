@@ -5,8 +5,6 @@ import com.avaneesh.yodha.Eventify.enums.SeatStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.util.List;
-
 @Data
 @Entity
 @Table(name = "seats")
@@ -36,4 +34,7 @@ public class Seat {
 
     @Column(nullable = false)
     private Double seatPricing;
+
+    @Version
+    private Long version;
 }

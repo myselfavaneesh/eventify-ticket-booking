@@ -2,7 +2,7 @@ package com.avaneesh.yodha.Eventify.dto.response;
 
 import com.avaneesh.yodha.Eventify.entities.Events;
 import com.avaneesh.yodha.Eventify.entities.Users;
-import com.avaneesh.yodha.Eventify.enums.BookingStatus;;
+import com.avaneesh.yodha.Eventify.enums.BookingStatus;
 import lombok.Data;
 
 import java.time.LocalDateTime;

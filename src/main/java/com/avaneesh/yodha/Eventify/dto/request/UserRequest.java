@@ -3,7 +3,10 @@ package com.avaneesh.yodha.Eventify.dto.request;
 import com.avaneesh.yodha.Eventify.enums.Gender;
 import com.avaneesh.yodha.Eventify.enums.UserTypes;
 import jakarta.validation.constraints.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter

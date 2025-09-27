@@ -1,7 +1,6 @@
 package com.avaneesh.yodha.Eventify.security;
 
 import com.avaneesh.yodha.Eventify.entities.Users;
-import com.avaneesh.yodha.Eventify.enums.UserTypes;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

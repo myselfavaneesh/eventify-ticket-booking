@@ -3,6 +3,7 @@ package com.avaneesh.yodha.Eventify.exception;
 import com.avaneesh.yodha.Eventify.utils.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -85,6 +86,15 @@ public class GlobalExceptionHandler {
         ApiResponse<String> response = new ApiResponse<>(
                 false,
                 ex.getMessage(),
+                null);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ApiResponse<String>> handleOptimisticLockingFailure(ObjectOptimisticLockingFailureException ex) {
+        ApiResponse<String> response = new ApiResponse<>(
+                false,
+                "The requested seat was just booked by someone else. Please try selecting a different seat.",
                 null);
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }

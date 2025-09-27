@@ -21,8 +21,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Service
 public class BookingService {
@@ -153,6 +151,30 @@ public class BookingService {
         return bookingMapper.toBookingResponse(updatedBooking);
     }
 
+    // For Booking Cleanup Service
+    public void cancelBooking(Long bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + bookingId));
+
+        if (booking.getStatus() == BookingStatus.CANCELLED) {
+            throw new IllegalStateException("Booking is already cancelled.");
+        }
+
+        // Free the seats
+        for (Seat seat : booking.getBookedSeats()) {
+            seat.setStatus(SeatStatus.AVAILABLE);
+            seat.setBooking(null); // Remove association with the booking
+        }
+        seatRepository.saveAll(booking.getBookedSeats());
+
+        // Update the booking status
+        booking.setStatus(BookingStatus.CANCELLED);
+
+
+        paymentService.refundPayment(booking.getPayment().getTransactionId());
+
+        Booking updatedBooking = bookingRepository.save(booking);
+    }
     /**
      * DELETE: Deletes a booking (for admin purposes) and frees the associated seats.
      */
