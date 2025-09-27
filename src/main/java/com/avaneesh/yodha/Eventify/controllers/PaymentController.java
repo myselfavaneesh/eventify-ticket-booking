@@ -34,7 +34,7 @@ public class PaymentController {
             bookingResponse = paymentService.confirmPayment(paymentRequest);
             apiResponse = new ApiResponse<>(true, "Payment confirmed and booking is complete.", bookingResponse);
         } else {
-            bookingResponse = paymentService.rejectPayment(paymentRequest);
+            bookingResponse = paymentService.failedPayment(paymentRequest);
             apiResponse = new ApiResponse<>(false, "Payment Failed and booking is Canceled.", bookingResponse);
         }
         return ResponseEntity.ok(apiResponse);

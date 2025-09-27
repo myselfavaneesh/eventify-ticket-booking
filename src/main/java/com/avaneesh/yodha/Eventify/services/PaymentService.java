@@ -31,6 +31,8 @@ public class PaymentService {
 
     @Autowired
     private BookingMapper bookingMapper;
+    @Autowired
+    private EmailService emailService;
 
     @Transactional
     public PaymentResponse initiatePayment(Long bookingId) {
@@ -80,11 +82,12 @@ public class PaymentService {
         }
 
         Booking confirmedBooking = bookingRepository.save(booking);
+        emailService.sendBookingConfirmationEmail(confirmedBooking);
         return bookingMapper.toBookingResponse(confirmedBooking);
     }
 
     @Transactional
-    public BookingResponse rejectPayment(PaymentRequest paymentRequest) {
+    public BookingResponse failedPayment(PaymentRequest paymentRequest) {
         Payments payment = paymentRepository.findByTransactionId(paymentRequest.getTransactionId())
                 .orElseThrow(() -> new ResourceNotFoundException("Payment transaction not found with id: " + paymentRequest.getTransactionId()));
 
@@ -103,8 +106,9 @@ public class PaymentService {
             seat.setStatus(SeatStatus.AVAILABLE);
         }
 
-        Booking confirmedBooking = bookingRepository.save(booking);
-        return bookingMapper.toBookingResponse(confirmedBooking);
+        Booking failedBooking = bookingRepository.save(booking);
+        emailService.sendPaymentFailedEmail(failedBooking);
+        return bookingMapper.toBookingResponse(failedBooking);
     }
 
     @Transactional
