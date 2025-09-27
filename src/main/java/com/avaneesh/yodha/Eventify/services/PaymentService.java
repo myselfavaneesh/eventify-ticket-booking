@@ -8,6 +8,7 @@ import com.avaneesh.yodha.Eventify.entities.Events;
 import com.avaneesh.yodha.Eventify.entities.Payments;
 import com.avaneesh.yodha.Eventify.entities.Seat;
 import com.avaneesh.yodha.Eventify.enums.BookingStatus;
+import com.avaneesh.yodha.Eventify.enums.PaymentMethod;
 import com.avaneesh.yodha.Eventify.enums.PaymentStatus;
 import com.avaneesh.yodha.Eventify.enums.SeatStatus;
 import com.avaneesh.yodha.Eventify.exception.ResourceNotFoundException;
@@ -41,12 +42,6 @@ public class PaymentService {
         this.emailService = emailService;
     }
 
-    /**
-     * Initiates a payment for a PENDING booking.
-     *
-     * @param bookingId The ID of the booking.
-     * @return A DTO containing the payment initiation details (e.g., a mock payment URL).
-     */
     @Transactional
     public PaymentResponse initiatePayment(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
@@ -75,12 +70,6 @@ public class PaymentService {
         return new PaymentResponse(confirmationUrl, "Payment initiated. Use this link to complete the payment process.");
     }
 
-    /**
-     * Processes a payment confirmation webhook from a payment gateway.
-     *
-     * @param paymentRequest The payment details from the webhook.
-     * @return A DTO representing the updated booking.
-     */
     @Transactional
     public BookingResponse processPaymentWebhook(PaymentRequest paymentRequest) {
         Payments payment = paymentRepository.findByTransactionId(paymentRequest.getTransactionId())
@@ -93,11 +82,6 @@ public class PaymentService {
         }
     }
 
-    /**
-     * Processes a refund for a given transaction.
-     *
-     * @param transactionId The unique ID of the transaction to refund.
-     */
     @Transactional
     public void refundPayment(String transactionId) {
         Payments payment = paymentRepository.findByTransactionId(transactionId)
@@ -109,7 +93,7 @@ public class PaymentService {
 
     // --- Private Helper Methods ---
 
-    private BookingResponse handleSuccessfulPayment(Payments payment, String paymentMethod) {
+    private BookingResponse handleSuccessfulPayment(Payments payment, PaymentMethod paymentMethod) {
         payment.setStatus(PaymentStatus.COMPLETED);
         payment.setPaymentMethod(paymentMethod);
         paymentRepository.save(payment);
@@ -126,7 +110,7 @@ public class PaymentService {
         return bookingMapper.toBookingResponse(confirmedBooking);
     }
 
-    private BookingResponse handleFailedPayment(Payments payment, String paymentMethod) {
+    private BookingResponse handleFailedPayment(Payments payment, PaymentMethod paymentMethod) {
         payment.setStatus(PaymentStatus.FAILED);
         payment.setPaymentMethod(paymentMethod);
         paymentRepository.save(payment);

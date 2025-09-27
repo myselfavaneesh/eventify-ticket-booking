@@ -48,10 +48,10 @@ public class PaymentController {
         ApiResponse<BookingResponse> apiResponse;
 
         if (paymentRequest.getPaymentStatus() == PaymentStatus.COMPLETED) {
-            bookingResponse = paymentService.confirmPayment(paymentRequest);
+            bookingResponse = paymentService.processPaymentWebhook(paymentRequest);
             apiResponse = new ApiResponse<>(true, "Payment confirmed and booking is complete.", bookingResponse);
         } else {
-            bookingResponse = paymentService.failedPayment(paymentRequest);
+            bookingResponse = paymentService.processPaymentWebhook(paymentRequest);
             apiResponse = new ApiResponse<>(false, "Payment failed and booking is cancelled.", bookingResponse);
         }
         return ResponseEntity.ok(apiResponse);
