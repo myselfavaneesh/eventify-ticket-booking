@@ -6,6 +6,7 @@ import com.avaneesh.yodha.Eventify.dto.response.PaymentResponse;
 import com.avaneesh.yodha.Eventify.enums.PaymentStatus;
 import com.avaneesh.yodha.Eventify.services.PaymentService;
 import com.avaneesh.yodha.Eventify.utils.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/payments")
+@Tag(name = "Payments", description = "Endpoints for handling payments")
 public class PaymentController {
 
     private final PaymentService paymentService;

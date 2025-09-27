@@ -4,6 +4,7 @@ import com.avaneesh.yodha.Eventify.dto.request.EventRequestDTO;
 import com.avaneesh.yodha.Eventify.dto.response.EventsResponse;
 import com.avaneesh.yodha.Eventify.services.EventService;
 import com.avaneesh.yodha.Eventify.utils.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/events")
+@Tag(name = "Events", description = "Endpoints for managing events")
 public class EventController {
 
     private final EventService eventService;

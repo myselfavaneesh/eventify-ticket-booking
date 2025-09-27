@@ -4,6 +4,7 @@ import com.avaneesh.yodha.Eventify.dto.request.BookingRequestDTO;
 import com.avaneesh.yodha.Eventify.dto.response.BookingResponse;
 import com.avaneesh.yodha.Eventify.services.BookingService;
 import com.avaneesh.yodha.Eventify.utils.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/bookings")
+@Tag(name = "Bookings", description = "Endpoints for managing event bookings")
 public class BookingController {
 
     private final BookingService bookingService;

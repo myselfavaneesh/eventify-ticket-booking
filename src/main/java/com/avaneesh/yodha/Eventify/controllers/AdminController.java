@@ -5,6 +5,7 @@ import com.avaneesh.yodha.Eventify.dto.response.BookingResponse;
 import com.avaneesh.yodha.Eventify.dto.response.UserResponse;
 import com.avaneesh.yodha.Eventify.services.AdminService;
 import com.avaneesh.yodha.Eventify.utils.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +19,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/admin")
+@Tag(name = "Admin", description = "Endpoints for administrative tasks")
 public class AdminController {
 
     private final AdminService adminService;

@@ -58,6 +58,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/users/login", "/auth/users").permitAll()
                         // VENDOR and ADMIN can manage events
                         .requestMatchers(HttpMethod.POST,"/events").hasAnyAuthority("VENDOR", "ADMIN")
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.PUT,"/events/**").hasAnyAuthority("VENDOR", "ADMIN")
                         .requestMatchers(HttpMethod.DELETE,"/events/**").hasAnyAuthority("VENDOR", "ADMIN")
                         // Add this rule: Only ADMIN can access admin endpoints

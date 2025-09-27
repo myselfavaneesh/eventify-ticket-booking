@@ -5,6 +5,7 @@ import com.avaneesh.yodha.Eventify.dto.request.UserRequest;
 import com.avaneesh.yodha.Eventify.dto.response.UserResponse;
 import com.avaneesh.yodha.Eventify.services.UserServices;
 import com.avaneesh.yodha.Eventify.utils.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/auth/users")
+@Tag(name = "Authentication", description = "Endpoints for user authentication and registration")
 public class AuthUsersController {
 
     private final UserServices userServices;
@@ -32,7 +34,7 @@ public class AuthUsersController {
      * @param userRequest The user details for registration.
      * @return A response entity containing the created user's details.
      */
-    @PostMapping("/register")
+    @PostMapping
     public ResponseEntity<ApiResponse<UserResponse>> registerUser(@Valid @RequestBody UserRequest userRequest) {
         UserResponse userResponse = userServices.createUser(userRequest);
         ApiResponse<UserResponse> response = new ApiResponse<>(true, "User created successfully", userResponse);
