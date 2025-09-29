@@ -30,12 +30,7 @@ public class EventController {
         this.eventService = eventService;
     }
 
-    /**
-     * Creates a new event.
-     *
-     * @param request The details of the event to create.
-     * @return A response entity containing the created event's details.
-     */
+
     @PostMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
     public ResponseEntity<ApiResponse<EventsResponse>> createEvent(@Valid @ModelAttribute EventRequestDTO request) {
         EventsResponse event = eventService.createEvent(request);
@@ -43,14 +38,7 @@ public class EventController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    /**
-     * Retrieves a paginated list of all events.
-     *
-     * @param pageNo   The page number to retrieve (default is 0).
-     * @param pageSize The number of events per page (default is 10).
-     * @param sortBy   The field to sort the events by (default is "eventTimestamp").
-     * @return A response entity containing the paginated list of events.
-     */
+
     @GetMapping
     public ResponseEntity<ApiResponse<Page<EventsResponse>>> getAllEvents(
             @RequestParam(defaultValue = "0") int pageNo,
@@ -80,12 +68,6 @@ public class EventController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Retrieves a specific event by its ID.
-     *
-     * @param id The ID of the event to retrieve.
-     * @return A response entity containing the event details.
-     */
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<EventsResponse>> getEventById(@PathVariable Long id) {
         EventsResponse event = eventService.getEventById(id);
@@ -93,25 +75,12 @@ public class EventController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Deletes a specific event by its ID.
-     *
-     * @param id The ID of the event to delete.
-     * @return A response entity with no content, indicating successful deletion.
-     */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<String>> deleteEvent(@PathVariable Long id) {
         eventService.deleteEvent(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(new ApiResponse<>(true, "Event deleted successfully", null));
     }
 
-    /**
-     * Partially updates an existing event.
-     *
-     * @param id      The ID of the event to partially update.
-     * @param request The partial event details.
-     * @return A response entity containing the partially updated event's details.
-     */
     @PatchMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE }, value = "/{id}")
     public ResponseEntity<ApiResponse<EventsResponse>> patchEvent(@PathVariable Long id, @ModelAttribute EventRequestDTO request) {
         EventsResponse patchedEvent = eventService.updateEvent(id, request);

@@ -109,29 +109,19 @@ public class EventService {
      */
     @Transactional
     public EventsResponse updateEvent(Long eventId, EventRequestDTO request) {
-        // 1. Existing event ko database se fetch karein
         Events existingEvent = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + eventId));
 
-        // ... seat layout change karne ka logic waisa hi rahega ...
         boolean layoutChanged = hasLayoutChanged(existingEvent, request);
         if (layoutChanged) {
-            if (existingEvent.getBookedSeats() > 0) {
+            if (existingEvent.getBookedSeats() > 0 || existingEvent.getBookings() != null && !existingEvent.getBookings().isEmpty()) {
                 throw new IllegalStateException("Cannot change seat layout for an event that already has bookings.");
             }
-            seatRepository.deleteByEvent(existingEvent);
             existingEvent.getSeats().clear();
             List<Seat> newSeats = generateSeatsForEvent(existingEvent, request);
             existingEvent.getSeats().addAll(newSeats);
         }
-
-        if (request.getImages() != null && !request.getImages().isEmpty()) {
-             storageService.deleteFiles(existingEvent.getImageUrls());
-            List<String> newImageUrls = storageService.saveFiles(request.getImages());
-            existingEvent.setImageUrls(newImageUrls);
-        }
         eventMapper.updateEventFromDto(request, existingEvent);
-
         Events updatedEvent = eventRepository.save(existingEvent);
         return eventMapper.toEventResponse(updatedEvent);
     }
@@ -143,9 +133,16 @@ public class EventService {
      */
     @Transactional
     public void deleteEvent(Long id) {
-        if (!eventRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Event not found with id: " + id);
-        }
+        // 1. Pehle event ko database se fetch karein jise delete karna hai.
+        Events eventToDelete = eventRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + id));
+
+        // 2. Event ko delete karne se pehle, uski saari seats ko delete karein.
+        //    Yeh method humne pehle hi theek kar liya tha.
+        seatRepository.deleteByEvent(eventToDelete);
+
+        // 3. Ab jab saari seats delete ho chuki hain, event ko safely delete karein.
+        eventRepository.delete(eventToDelete);
     }
 
     // --- Private Helper Methods ---
