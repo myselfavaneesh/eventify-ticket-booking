@@ -1,8 +1,11 @@
 package com.avaneesh.yodha.Eventify.repository.specifications;
 
 import com.avaneesh.yodha.Eventify.entities.Events;
-import org.springframework.data.jpa.domain.Specification;
+import com.avaneesh.yodha.Eventify.entities.Seat;
+import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.jpa.domain.Specification;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,9 +30,18 @@ public class EventSpecification {
             if (endDate != null) {
                 predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("eventTimestamp"), endDate));
             }
-            if (minPrice != null && maxPrice != null){
-                predicates.add(criteriaBuilder.between(root.get("seatPricing"), minPrice, maxPrice));
+            if (minPrice != null || maxPrice != null) {
+                Join<Events, Seat> seatJoin = root.join("seats");
+
+                if (minPrice != null) {
+                    predicates.add(criteriaBuilder.greaterThanOrEqualTo(seatJoin.get("seatPricing"), minPrice));
+                }
+                if (maxPrice != null) {
+                    predicates.add(criteriaBuilder.lessThanOrEqualTo(seatJoin.get("seatPricing"), maxPrice));
+                }
             }
+            query.distinct(true);
+
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }
