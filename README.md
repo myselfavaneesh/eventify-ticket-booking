@@ -13,11 +13,11 @@ Eventify is a robust and scalable backend solution for an event booking platform
 ## 2. Key Features
 
 - **User Authentication**: Secure user registration and login using JWT (JSON Web Tokens).
-- **Event Management**: Admins can create, update, and delete events, including complex seating arrangements and pricing.
+- **Event Management**: Admins and vendors can create, update, and delete events.
 - **Seat Management**: Dynamic generation of seats with unique numbers and pricing based on rows.
-- **Booking System**: Users can book one or more seats for an event. Bookings are initially `PENDING` and are confirmed upon successful payment.
-- **Payment Processing**: A mock payment system that allows for payment initiation, confirmation, and failure, with email notifications for each status.
-- **Scheduled Tasks**: A background job runs periodically to clean up expired `PENDING` bookings, releasing the seats.
+- **Booking System**: Users can book seats for an event, with bookings confirmed upon successful payment.
+- **Payment Processing**: A mock payment system that handles payment initiation, confirmation, and failure.
+- **Scheduled Tasks**: A background job runs periodically to clean up expired pending bookings, releasing the seats.
 - **Admin Dashboard**: Endpoints to provide statistics for an admin dashboard, including total users, events, bookings, and revenue.
 - **Asynchronous Emailing**: Non-blocking email notifications for booking confirmations and payment failures.
 
@@ -36,7 +36,31 @@ Eventify is a robust and scalable backend solution for an event booking platform
 
 ---
 
-## 4. Getting Started
+## 4. API Overview
+
+The API is organized around REST principles, with the base path for all endpoints being `/api/v1`.
+
+- **Authentication (`/auth/users`):** Handles user registration and login.
+- **Events (`/api/events`):** Provides operations for creating, retrieving, updating, and deleting events.
+- **Bookings (`/api/bookings`):** Allows users to create, view, and manage their event bookings.
+- **Payments (`/api/payments`):** Manages the payment process for bookings.
+- **Admin (`/api/admin`):** Exposes administrative endpoints for monitoring and managing the platform.
+
+For a detailed and interactive exploration of all endpoints, please refer to the Swagger UI documentation.
+
+---
+
+## 5. API Documentation (Swagger UI)
+
+Once the application is running, you can access the interactive API documentation via Swagger UI at the following URL:
+
+[http://localhost:8080/api/v1/swagger-ui.html](http://localhost:8080/api/v1/swagger-ui.html)
+
+The Swagger UI allows you to explore all the API endpoints, view their details, and test them directly from your browser.
+
+---
+
+## 6. Getting Started
 
 ### Prerequisites
 
@@ -67,17 +91,7 @@ Eventify is a robust and scalable backend solution for an event booking platform
 
 ---
 
-## 5. API Documentation (Swagger UI)
-
-Once the application is running, you can access the interactive API documentation via Swagger UI at the following URL:
-
-[http://localhost:8080/api/v1/swagger-ui.html](http://localhost:8080/api/v1/swagger-ui.html)
-
-The Swagger UI allows you to explore all the API endpoints, view their details, and test them directly from your browser.
-
----
-
-## 6. Project Structure
+## 7. Project Structure
 
 ```
 /src/main/java/com/avaneesh/yodha/Eventify
@@ -96,7 +110,7 @@ The Swagger UI allows you to explore all the API endpoints, view their details, 
 
 ---
 
-## 7. Security
+## 8. Security
 
 - **Authentication**: Handled via a `JWTFilter` that intercepts requests to protected endpoints.
 - **Authorization**: Endpoints are secured based on user roles (e.g., admin-only endpoints).
@@ -105,7 +119,7 @@ The Swagger UI allows you to explore all the API endpoints, view their details, 
 
 ---
 
-## 8. Database Schema
+## 9. Database Schema
 
 - **Users**: Stores user information, including credentials and roles.
 - **Events**: Contains details about each event, such as name, venue, date, and seating layout.
@@ -115,6 +129,6 @@ The Swagger UI allows you to explore all the API endpoints, view their details, 
 
 ---
 
-## 9. Contributing
+## 10. Contributing
 
 Contributions are welcome! Please feel free to submit a pull request or open an issue for any bugs or feature requests.
