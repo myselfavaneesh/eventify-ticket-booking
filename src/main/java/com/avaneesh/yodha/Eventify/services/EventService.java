@@ -121,6 +121,12 @@ public class EventService {
             List<Seat> newSeats = generateSeatsForEvent(existingEvent, request);
             existingEvent.getSeats().addAll(newSeats);
         }
+        if (request.getImages() != null && !request.getImages().isEmpty()) {
+            storageService.deleteFiles(existingEvent.getImageUrls());
+            existingEvent.getImageUrls().clear();
+            List<String> imageUrls = storageService.saveFiles(request.getImages());
+            existingEvent.setImageUrls(imageUrls);
+        }
         eventMapper.updateEventFromDto(request, existingEvent);
         Events updatedEvent = eventRepository.save(existingEvent);
         return eventMapper.toEventResponse(updatedEvent);
