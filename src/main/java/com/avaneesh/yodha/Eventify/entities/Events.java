@@ -1,5 +1,6 @@
 package com.avaneesh.yodha.Eventify.entities;
 
+import com.avaneesh.yodha.Eventify.enums.CategoryEnum;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -35,6 +36,10 @@ public class Events {
     @Column(nullable = false)
     private int bookedSeats = 0;
 
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private CategoryEnum category;
+
     // One Event has Many Seats
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Seat> seats = new ArrayList<>();
@@ -42,6 +47,11 @@ public class Events {
     // One Event has Many Bookings
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Booking> bookings = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "event_images", joinColumns = @JoinColumn(name = "event_id"))
+    @Column(name = "image_url")
+    private List<String> imageUrls = new ArrayList<>();
 
     /**
      * Calculates the number of available seats.

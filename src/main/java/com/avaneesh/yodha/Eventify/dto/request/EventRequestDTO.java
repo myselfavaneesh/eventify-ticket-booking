@@ -1,10 +1,9 @@
 package com.avaneesh.yodha.Eventify.dto.request;
 
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Size;
+import com.avaneesh.yodha.Eventify.enums.CategoryEnum;
+import jakarta.validation.constraints.*;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -28,4 +27,9 @@ public class EventRequestDTO {
     private int seatsPerRow;
     @NotEmpty(message = "Seat pricing cannot be empty")
     private List<Double> seatPricing;
+    @NotEmpty(message = "Images cannot be empty")
+    @Size(min = 1,max = 5, message = "At least one image is required Or Maximum 5 Images are allowed")
+    private List<MultipartFile> images;
+    @NotNull(message = "Gender cannot be blank.")
+    private CategoryEnum category;
 }

@@ -1,5 +1,6 @@
 package com.avaneesh.yodha.Eventify.dto.response;
 
+import com.avaneesh.yodha.Eventify.enums.CategoryEnum;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -14,4 +15,6 @@ public class EventsResponse {
     private LocalDateTime eventTimestamp;
     private List<SeatsResponse> seats;
     private List<BookingResponse> bookings;
+    private List<String> imageUrls;
+    private CategoryEnum category;
 }

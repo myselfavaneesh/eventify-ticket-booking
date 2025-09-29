@@ -9,13 +9,16 @@ import com.avaneesh.yodha.Eventify.exception.ResourceNotFoundException;
 import com.avaneesh.yodha.Eventify.mapper.EventMapper;
 import com.avaneesh.yodha.Eventify.repository.EventRepository;
 import com.avaneesh.yodha.Eventify.repository.SeatRepository;
+import com.avaneesh.yodha.Eventify.repository.specifications.EventSpecification;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,11 +31,13 @@ public class EventService {
     private final EventRepository eventRepository;
     private final SeatRepository seatRepository;
     private final EventMapper eventMapper;
+    private final StorageService storageService;
 
-    public EventService(EventRepository eventRepository, SeatRepository seatRepository, EventMapper eventMapper) {
+    public EventService(EventRepository eventRepository, SeatRepository seatRepository, EventMapper eventMapper, StorageService storageService) {
         this.eventRepository = eventRepository;
         this.seatRepository = seatRepository;
         this.eventMapper = eventMapper;
+        this.storageService = new StorageService();
     }
 
     /**
@@ -44,6 +49,11 @@ public class EventService {
     @Transactional
     public EventsResponse createEvent(EventRequestDTO request) {
         Events newEvent = eventMapper.toEvent(request);
+
+        if (request.getImages() != null && !request.getImages().isEmpty()) {
+            List<String> imageUrls = storageService.saveFiles(request.getImages());
+            newEvent.setImageUrls(imageUrls);
+        }
         Events savedEvent = eventRepository.save(newEvent);
 
         List<Seat> seats = generateSeatsForEvent(savedEvent, request);
@@ -66,17 +76,14 @@ public class EventService {
         return eventRepository.findAll(pageable).map(eventMapper::toEventResponse);
     }
 
-    /**
-     * Retrieves a paginated list of events for a specific venue.
-     *
-     * @param venue    The venue to filter by.
-     * @param pageNo   The page number.
-     * @param pageSize The size of the page.
-     * @return A paginated list of event DTOs for the specified venue.
-     */
-    public Page<EventsResponse> getAllSpecificVenueEvents(String venue, int pageNo, int pageSize) {
-        Pageable pageable = PageRequest.of(pageNo, pageSize);
-        return eventRepository.findByVenueContaining(venue, pageable).map(eventMapper::toEventResponse);
+    public Page<EventsResponse> searchEvents(
+            String name, String category, LocalDateTime startDate, LocalDateTime endDate,
+            int pageNo, int pageSize, String sortBy) {
+
+        Specification<Events> spec = EventSpecification.getEvents(name, category, startDate, endDate, null, null);
+        Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.DESC, sortBy));
+
+        return eventRepository.findAll(spec, pageable).map(eventMapper::toEventResponse);
     }
 
     /**
@@ -102,23 +109,27 @@ public class EventService {
      */
     @Transactional
     public EventsResponse updateEvent(Long eventId, EventRequestDTO request) {
+        // 1. Existing event ko database se fetch karein
         Events existingEvent = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + eventId));
 
+        // ... seat layout change karne ka logic waisa hi rahega ...
         boolean layoutChanged = hasLayoutChanged(existingEvent, request);
-
         if (layoutChanged) {
             if (existingEvent.getBookedSeats() > 0) {
                 throw new IllegalStateException("Cannot change seat layout for an event that already has bookings.");
             }
-            // Clear old seats and generate new ones
             seatRepository.deleteByEvent(existingEvent);
             existingEvent.getSeats().clear();
             List<Seat> newSeats = generateSeatsForEvent(existingEvent, request);
             existingEvent.getSeats().addAll(newSeats);
         }
 
-        // Update event properties from DTO
+        if (request.getImages() != null && !request.getImages().isEmpty()) {
+             storageService.deleteFiles(existingEvent.getImageUrls());
+            List<String> newImageUrls = storageService.saveFiles(request.getImages());
+            existingEvent.setImageUrls(newImageUrls);
+        }
         eventMapper.updateEventFromDto(request, existingEvent);
 
         Events updatedEvent = eventRepository.save(existingEvent);
