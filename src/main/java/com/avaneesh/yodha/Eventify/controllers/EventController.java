@@ -69,10 +69,12 @@ public class EventController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
             @RequestParam(defaultValue = "0") int pageNo,
             @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice,
             @RequestParam(defaultValue = "eventTimestamp") String sortBy) {
 
         Page<EventsResponse> events = eventService.searchEvents(
-                name, category, startDate, endDate, pageNo, pageSize, sortBy);
+                name, category, startDate, endDate, pageNo, pageSize, sortBy, minPrice, maxPrice);
 
         ApiResponse<Page<EventsResponse>> response = new ApiResponse<>(true, "Events fetched successfully", events);
         return ResponseEntity.ok(response);

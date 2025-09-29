@@ -27,7 +27,9 @@ public class EventSpecification {
             if (endDate != null) {
                 predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("eventTimestamp"), endDate));
             }
-
+            if (minPrice != null && maxPrice != null){
+                predicates.add(criteriaBuilder.between(root.get("seatPricing"), minPrice, maxPrice));
+            }
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }

@@ -78,9 +78,9 @@ public class EventService {
 
     public Page<EventsResponse> searchEvents(
             String name, String category, LocalDateTime startDate, LocalDateTime endDate,
-            int pageNo, int pageSize, String sortBy) {
+            int pageNo, int pageSize, String sortBy, Double minPrice, Double maxPrice) {
 
-        Specification<Events> spec = EventSpecification.getEvents(name, category, startDate, endDate, null, null);
+        Specification<Events> spec = EventSpecification.getEvents(name, category, startDate, endDate, minPrice, maxPrice);
         Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.DESC, sortBy));
 
         return eventRepository.findAll(spec, pageable).map(eventMapper::toEventResponse);
