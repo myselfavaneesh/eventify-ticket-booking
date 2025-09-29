@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
  * Controller for handling payment processing for event bookings.
  */
 @RestController
-@RequestMapping("/api/payments")
+@RequestMapping("/payments")
 @Tag(name = "Payments", description = "Endpoints for handling payments")
 public class PaymentController {
 

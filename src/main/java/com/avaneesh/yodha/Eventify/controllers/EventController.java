@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
  * Provides endpoints for creating, retrieving, updating, and deleting events.
  */
 @RestController
-@RequestMapping("/api/events")
+@RequestMapping("/events")
 @Tag(name = "Events", description = "Endpoints for managing events")
 public class EventController {
 

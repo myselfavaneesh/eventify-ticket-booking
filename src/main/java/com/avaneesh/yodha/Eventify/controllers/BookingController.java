@@ -18,7 +18,7 @@ import java.util.List;
  * Controller for managing event bookings.
  */
 @RestController
-@RequestMapping("/api/bookings")
+@RequestMapping("/bookings")
 @Tag(name = "Bookings", description = "Endpoints for managing event bookings")
 public class BookingController {
 

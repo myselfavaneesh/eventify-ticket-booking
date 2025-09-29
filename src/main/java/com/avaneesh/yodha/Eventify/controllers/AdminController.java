@@ -18,7 +18,7 @@ import java.util.List;
  * Provides endpoints for accessing dashboard statistics, user lists, and booking information.
  */
 @RestController
-@RequestMapping("/api/admin")
+@RequestMapping("/admin")
 @Tag(name = "Admin", description = "Endpoints for administrative tasks")
 public class AdminController {
 
