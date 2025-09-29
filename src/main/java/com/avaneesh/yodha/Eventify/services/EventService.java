@@ -146,7 +146,6 @@ public class EventService {
         if (!eventRepository.existsById(id)) {
             throw new ResourceNotFoundException("Event not found with id: " + id);
         }
-        eventRepository.deleteById(id);
     }
 
     // --- Private Helper Methods ---

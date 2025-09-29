@@ -6,6 +6,7 @@ import com.avaneesh.yodha.Eventify.dto.response.UserResponse;
 import com.avaneesh.yodha.Eventify.services.UserServices;
 import com.avaneesh.yodha.Eventify.utils.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,9 +49,8 @@ public class AuthUsersController {
      * @return A response entity containing the JWT token.
      */
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<String>> loginUser(@Valid @RequestBody UserLoginRequest userLoginRequest) {
-        String token = userServices.loginUser(userLoginRequest.getEmail(), userLoginRequest.getPassword());
-        ApiResponse<String> response = new ApiResponse<>(true, "User login successful", token);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ApiResponse<String>> loginUser(@Valid @RequestBody UserLoginRequest userLoginRequest , HttpServletResponse response) {
+        userServices.loginUser(userLoginRequest.getEmail(), userLoginRequest.getPassword(), response);
+        return ResponseEntity.ok(new ApiResponse<>(true, "User login successful", null));
     }
 }

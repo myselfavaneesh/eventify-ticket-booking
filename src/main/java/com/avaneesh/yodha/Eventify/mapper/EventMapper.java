@@ -21,6 +21,6 @@ public interface EventMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "seats", ignore = true)
     @Mapping(target = "bookings", ignore = true)
-    @Mapping(target = "bookedSeats", ignore = true) // This is managed by booking logic, not direct mapping
+    @Mapping(target = "bookedSeats", ignore = true)
     void updateEventFromDto(EventRequestDTO dto, @MappingTarget Events entity);
 }

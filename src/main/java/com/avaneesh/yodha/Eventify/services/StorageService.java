@@ -1,5 +1,6 @@
 package com.avaneesh.yodha.Eventify.services;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,6 +17,7 @@ public class StorageService {
 
     private final Path root = Paths.get("uploads");
 
+    @PostConstruct
     public void init() {
         try {
             Files.createDirectories(root);

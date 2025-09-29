@@ -9,6 +9,8 @@ import com.avaneesh.yodha.Eventify.mapper.UserMapper;
 import com.avaneesh.yodha.Eventify.repository.UserRepository;
 import com.avaneesh.yodha.Eventify.security.UserDetailImp;
 import com.avaneesh.yodha.Eventify.utils.JWTUtility;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -65,14 +67,21 @@ public class UserServices {
      * @return A JWT token string.
      * @throws ResourceNotFoundException if the authentication fails.
      */
-    public String loginUser(String email, String password) {
+    public void loginUser(String email, String password, HttpServletResponse response) {
         try {
             Authentication authentication = authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(email, password));
 
             UserDetailImp userDetails = (UserDetailImp) authentication.getPrincipal();
 
-            return jwtUtility.generateToken(userDetails.getUsername(), userDetails.getRoles());
+
+            Cookie jwtCookie = new Cookie("JWT-TOKEN", jwtUtility.generateToken(userDetails.getUsername(), userDetails.getRoles()));
+
+            jwtCookie.setHttpOnly(true);
+            jwtCookie.setSecure(false);
+            jwtCookie.setPath("/");
+            jwtCookie.setMaxAge(60 * 60 * 24);
+            response.addCookie(jwtCookie);
 
         } catch (AuthenticationException ex) {
             throw new ResourceNotFoundException("Invalid email or password");
