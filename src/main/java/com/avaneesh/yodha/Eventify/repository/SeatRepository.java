@@ -9,7 +9,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SeatRepository extends JpaRepository<Seat,Long> {
-    @Modifying
-    @Query("DELETE FROM Seat s WHERE s.event = :event")
-    void deleteByEvent(Events event);
 }

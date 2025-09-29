@@ -132,23 +132,12 @@ public class EventService {
         return eventMapper.toEventResponse(updatedEvent);
     }
 
-    /**
-     * Deletes an event by its ID.
-     *
-     * @param id The ID of the event to delete.
-     */
     @Transactional
     public void deleteEvent(Long id) {
-        // 1. Pehle event ko database se fetch karein jise delete karna hai.
-        Events eventToDelete = eventRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Event not found with id: " + id));
-
-        // 2. Event ko delete karne se pehle, uski saari seats ko delete karein.
-        //    Yeh method humne pehle hi theek kar liya tha.
-        seatRepository.deleteByEvent(eventToDelete);
-
-        // 3. Ab jab saari seats delete ho chuki hain, event ko safely delete karein.
-        eventRepository.delete(eventToDelete);
+        if (!eventRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Event not found with id: " + id);
+        }
+        eventRepository.deleteById(id);
     }
 
     // --- Private Helper Methods ---
