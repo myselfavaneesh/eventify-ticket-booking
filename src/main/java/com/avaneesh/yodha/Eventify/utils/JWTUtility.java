@@ -33,21 +33,12 @@ public class JWTUtility {
         this.expirationTime = expirationTime;
     }
 
-    /**
-     * Initializes the signing key after the bean has been constructed.
-     */
+
     @PostConstruct
     public void init() {
         this.signingKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    /**
-     * Generates a JWT token for a given username and roles.
-     *
-     * @param username The subject of the token.
-     * @param roles    The user's roles to be included in the claims.
-     * @return A signed JWT token string.
-     */
     public String generateToken(String username, List<String> roles) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles", roles);
@@ -61,33 +52,17 @@ public class JWTUtility {
                 .compact();
     }
 
-    /**
-     * Extracts the username (subject) from a JWT token.
-     *
-     * @param token The JWT token.
-     * @return The username.
-     */
     public String extractUsername(String token) {
         return extractAllClaims(token).getSubject();
     }
 
-    /**
-     * Extracts the roles from a JWT token.
-     *
-     * @param token The JWT token.
-     * @return A list of roles.
-     */
+
     @SuppressWarnings("unchecked")
     public List<String> extractRoles(String token) {
         return extractAllClaims(token).get("roles", List.class);
     }
 
-    /**
-     * Validates a JWT token by checking its signature and expiration.
-     *
-     * @param token The JWT token to validate.
-     * @return True if the token is valid, false otherwise.
-     */
+
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(signingKey).build().parseClaimsJws(token);
@@ -106,12 +81,10 @@ public class JWTUtility {
         return false;
     }
 
-    /**
-     * Helper method to extract all claims from a token.
-     *
-     * @param token The JWT token.
-     * @return The claims from the token.
-     */
+    public long getExpiration() {
+        return expirationTime;
+    }
+
     private Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(signingKey)

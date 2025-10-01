@@ -55,14 +55,16 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/auth/users/login", "/auth/users").permitAll()
+                        .requestMatchers("/auth/users/login", "/auth/users", "/auth/users/logout").permitAll()
+                        .requestMatchers("/users/me").authenticated()
+                        .requestMatchers("/uploads/**").permitAll()
                         // VENDOR and ADMIN can manage events
                         .requestMatchers(HttpMethod.POST,"/events").hasAnyAuthority("VENDOR", "ADMIN")
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.PUT,"/events/**").hasAnyAuthority("VENDOR", "ADMIN")
+                        .requestMatchers(HttpMethod.GET,"/events/**").permitAll()
                         .requestMatchers(HttpMethod.DELETE,"/events/**").hasAnyAuthority("VENDOR", "ADMIN")
-                        // Add this rule: Only ADMIN can access admin endpoints
-                        .requestMatchers("/admin/**").hasAuthority("ADMIN")
+                        .requestMatchers("/admin/**").hasAnyAuthority("VENDOR", "ADMIN")
                         .anyRequest().authenticated())
                 .exceptionHandling(ex ->
                         ex
@@ -79,7 +81,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration
-                .setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:5173", "http://localhost:4200")); // Common
+                .setAllowedOrigins(List.of("http://localhost:3001", "http://localhost:5173", "http://localhost:4200")); // Common
                                                                                                                         // ports
                                                                                                                         // for
                                                                                                                         // React/Vue/Angular

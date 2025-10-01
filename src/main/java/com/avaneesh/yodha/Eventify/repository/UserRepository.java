@@ -9,4 +9,6 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<Users, Long> {
     Optional<Users> getUsersByEmail(@NotBlank(message = "Email cannot be blank.") @Email(message = "Invalid email format.") String email);
+
+    Optional<Object> findByEmail(String email);
 }
